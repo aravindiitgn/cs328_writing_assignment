@@ -11,6 +11,15 @@ import io
 st.set_page_config(layout="wide", page_title="CO₂ & GHG Emissions Analysis")
 
 # --- Title & Introduction ---
+
+st.markdown(
+    """
+    <h1 style='text-align: center;'>
+        CS328 Writing Assignment
+    </h1>
+    """,
+    unsafe_allow_html=True
+)
 st.markdown("# CO₂ and Greenhouse Gas Emissions Analysis")
 st.markdown(
     """
@@ -29,42 +38,14 @@ def load_data():
 
 data, codebook = load_data()
 
-st.markdown("```python\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Ensure that plots are displayed in the notebook\n%matplotlib inline\n\n# Load the datasets\ndata = pd.read_csv('owid-co2-data.csv')\ncodebook = pd.read_csv('owid-co2-codebook.csv')\n```")
+
 st.write("=== Data Sample ===")
 st.dataframe(data.head(5))
 st.write("=== Codebook Sample ===")
 st.dataframe(codebook.head(5))
 
-# --- Step 2: Data Exploration and Preliminary Cleaning ---
-st.markdown("# Step 2: Data Exploration and Preliminary Cleaning")
-st.markdown(
-    """
-    After loading our dataset and codebook, our next move is to understand its structure and content.
-    We'll start by:
-    - Using the `.info()` method to see the data types and non-null counts.
-    - Using `.describe()` to obtain summary statistics for numerical columns.
-    - Counting the number of missing values in each column.
-    """
-)
-st.code("""
-print("=== Data Information (first few lines) ===")
-data.info(max_cols=20, memory_usage=False, verbose=False)  
-
-print("\\n=== Summary Statistics (first 5 rows) ===")
-print(data.describe().head(5))
-
-print("\\n=== Missing Values per Column (first 5 columns) ===")
-print(data.isnull().sum().head(5))
-""", language="python")
-with st.expander("▶️ Data Info & Stats"):
-    buf = io.StringIO()
-    data.info(max_cols=20, memory_usage=False, verbose=False, buf=buf)
-    st.text(buf.getvalue())
-    st.write(data.describe().head(5))
-    st.write(data.isnull().sum().head(5))
-
-# --- Step 3: Data Cleaning and Preprocessing ---
-st.markdown("# Step 3: Data Cleaning and Preprocessing")
+# --- Step 2: Data Cleaning and Preprocessing ---
+st.markdown("# Data Cleaning and Preprocessing")
 st.markdown(
     """
     In this step we will:
@@ -75,29 +56,6 @@ st.markdown(
     This cleaning process will help us to ensure that the subsequent analysis—such as visualizing trends and performing statistical tests—is based on reliable data.
     """
 )
-st.code("""
-# Calculate missing percentage for each column
-missing_pct = data.isnull().mean() * 100
-missing_df = missing_pct.sort_values(ascending=False).to_frame(name='missing_pct')
-
-# Show only the top 10 columns by missing percentage
-print("=== Missing Percentage per Column (top 10) ===")
-print(missing_df.head(10))
-
-# Define a threshold for dropping columns (e.g., columns with more than 60% missing values)
-threshold = 60.0
-columns_to_drop = missing_df[missing_df['missing_pct'] > threshold].index.tolist()
-print(f"\\nColumns to drop (>{threshold}% missing):")
-print(columns_to_drop)
-
-# Create a cleaned copy of the data by dropping these columns
-data_clean = data.drop(columns=columns_to_drop)
-print(f"\\nData shape after dropping columns: {data_clean.shape}")
-
-# For our analysis, require 'country', 'year', and 'co2' non-null
-data_clean = data_clean.dropna(subset=['country', 'year', 'co2'])
-print(f"Data shape after dropping rows with missing 'country', 'year', or 'co2': {data_clean.shape}")
-""", language="python")
 # Execute cleaning
 missing_pct = data.isnull().mean() * 100
 missing_df = missing_pct.sort_values(ascending=False).to_frame('missing_pct')
@@ -106,9 +64,10 @@ data_clean = data.drop(columns=columns_to_drop).dropna(subset=['country','year',
 st.write("Columns to drop ( >60% missing ):", columns_to_drop)
 st.write("Shape after cleaning:", data_clean.shape)
 
-# --- Step 4: Exploratory Data Analysis ---
-st.markdown("# Step 4: Exploratory Data Analysis")
+# --- Step 3: Exploratory Data Analysis ---
+st.markdown("# Analysing the Data")
 
+# Global Emissions Trends
 st.markdown("## Global Emissions Trends")
 st.markdown(
     """
@@ -125,23 +84,16 @@ grouped_year = data_clean.groupby('year').agg({
     'population': 'sum'
 }).reset_index()
 
-fig1, ax1 = plt.subplots(figsize=(10,5))
-ax1.plot(grouped_year['year'], grouped_year['co2'], marker='o', linestyle='-', label='Total CO₂ Emissions')
-ax1.set_title("Global Total CO₂ Emissions Over Time")
-ax1.set_xlabel("Year")
-ax1.set_ylabel("Total CO₂ Emissions")
-ax1.legend()
-ax1.grid(True)
-st.pyplot(fig1)
-
-fig2, ax2 = plt.subplots(figsize=(10,5))
-ax2.plot(grouped_year['year'], grouped_year['co2_per_capita'], marker='o', linestyle='-', label='Average CO₂ per Capita')
-ax2.set_title("Global Average CO₂ Emissions Per Capita Over Time")
-ax2.set_xlabel("Year")
-ax2.set_ylabel("Average CO₂ per Capita")
-ax2.legend()
-ax2.grid(True)
-st.pyplot(fig2)
+# Interactive line chart for total and per‑capita
+fig1 = px.line(
+    grouped_year,
+    x='year',
+    y=['co2','co2_per_capita'],
+    labels={'value':'Emissions','variable':'Metric','year':'Year'},
+    title="Global CO₂ Emissions Trends"
+)
+fig1.update_traces(mode='markers+lines')
+st.plotly_chart(fig1, use_container_width=True)
 
 st.markdown(
     """
@@ -151,6 +103,7 @@ st.markdown(
     """
 )
 
+# Correlation Analysis
 st.markdown("## Correlation Analysis of Emission Indicators")
 st.markdown(
     """
@@ -172,23 +125,22 @@ corr_matrix = corr_data.corr()
 st.write("=== Correlation Matrix ===")
 st.dataframe(corr_matrix)
 
-fig3, ax3 = plt.subplots(figsize=(8,6))
-cax = ax3.imshow(corr_matrix, cmap='coolwarm', interpolation='none', aspect='auto')
-plt.colorbar(cax, label='Correlation Coefficient')
-ax3.set_xticks(range(len(columns_for_corr)))
-ax3.set_xticklabels(columns_for_corr, rotation=45)
-ax3.set_yticks(range(len(columns_for_corr)))
-ax3.set_yticklabels(columns_for_corr)
-ax3.set_title("Correlation Matrix of Selected Emission Indicators")
-plt.tight_layout()
-st.pyplot(fig3)
+# Interactive heatmap
+fig3 = px.imshow(
+    corr_matrix,
+    x=columns_for_corr,
+    y=columns_for_corr,
+    color_continuous_scale='RdBu_r',
+    labels=dict(color='Correlation'),
+    title="Correlation Matrix of Selected Emission Indicators"
+)
+st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown(
     """
     The correlation matrix of key emission indicators reveals uniformly strong positive relationships, indicating that different sources of greenhouse gases tend to rise and fall together globally. Total CO₂ emissions correlate most closely with oil CO₂ (r ≈ 0.97) and coal CO₂ (r ≈ 0.96), reflecting the continued dominance of fossil fuels. Methane and nitrous oxide emissions also track closely with total CO₂ (r ≈ 0.92 and r ≈ 0.95, respectively) and exhibit an exceptionally high inter‑gas correlation (r ≈ 0.98), suggesting common agricultural and industrial drivers. Cement CO₂ shows slightly weaker—but still substantial—links to other sources (r ≈ 0.79–0.91). Overall, these patterns underscore how economic activity, energy use, and land‑use practices jointly drive multiple greenhouse‑gas emissions, reinforcing the need for integrated mitigation strategies.
     """
 )
-
 # --- Country-Level Analysis ---
 st.markdown("# Country-Level Analysis")
 st.markdown(
@@ -201,33 +153,37 @@ st.markdown(
     """
 )
 latest_year = int(data_clean['year'].max())
-latest_data = data_clean[data_clean['year']==latest_year]
+latest_data = data_clean[data_clean['year'] == latest_year]
 top_emitters = latest_data.sort_values(by='co2', ascending=False)['country'].unique()[:10]
 st.write(f"Top emitters in {latest_year}:", list(top_emitters))
 
 data_top = data_clean[data_clean['country'].isin(top_emitters)]
 
-fig4, ax4 = plt.subplots(figsize=(12,6))
-for country in top_emitters:
-    df_country = data_top[data_top['country']==country]
-    ax4.plot(df_country['year'], df_country['co2'], marker='o', label=country)
-ax4.set_title("CO₂ Emissions Trends for Top Emitters")
-ax4.set_xlabel("Year")
-ax4.set_ylabel("Total CO₂ Emissions")
-ax4.legend(bbox_to_anchor=(1,1))
-ax4.grid(True)
-st.pyplot(fig4)
+col1, col2 = st.columns(2)
 
-fig5, ax5 = plt.subplots(figsize=(12,6))
-for country in top_emitters:
-    df_country = data_top[data_top['country']==country]
-    ax5.plot(df_country['year'], df_country['co2_per_capita'], marker='o', label=country)
-ax5.set_title("CO₂ Emissions Per Capita Trends for Top Emitters")
-ax5.set_xlabel("Year")
-ax5.set_ylabel("CO₂ Emissions Per Capita")
-ax5.legend(bbox_to_anchor=(1,1))
-ax5.grid(True)
-st.pyplot(fig5)
+with col1:
+    fig4 = px.line(
+        data_top,
+        x='year',
+        y='co2',
+        color='country',
+        title="Total CO₂ Emissions Trends for Top Emitters",
+        labels={'co2':'Total CO₂ Emissions','year':'Year','country':'Country'}
+    )
+    fig4.update_traces(mode='markers+lines')
+    st.plotly_chart(fig4, use_container_width=True)
+
+with col2:
+    fig5 = px.line(
+        data_top,
+        x='year',
+        y='co2_per_capita',
+        color='country',
+        title="CO₂ Emissions Per Capita Trends for Top Emitters",
+        labels={'co2_per_capita':'CO₂ per Capita','year':'Year','country':'Country'}
+    )
+    fig5.update_traces(mode='markers+lines')
+    st.plotly_chart(fig5, use_container_width=True)
 
 st.markdown(
     """
@@ -252,16 +208,58 @@ global_fuel = data_clean.groupby('year').agg({
     'oil_co2':'sum'
 }).reset_index()
 
-fig6, ax6 = plt.subplots(figsize=(12,6))
-ax6.plot(global_fuel['year'], global_fuel['cement_co2'], marker='o', label='Cement CO₂')
-ax6.plot(global_fuel['year'], global_fuel['coal_co2'], marker='o', label='Coal CO₂')
-ax6.plot(global_fuel['year'], global_fuel['oil_co2'], marker='o', label='Oil CO₂')
-ax6.set_title("Global Fuel-Specific CO₂ Emissions Trends")
-ax6.set_xlabel("Year")
-ax6.set_ylabel("CO₂ Emissions")
-ax6.legend()
-ax6.grid(True)
-st.pyplot(fig6)
+# Interactive multi-line plot
+fig6 = px.line(
+    global_fuel,
+    x='year',
+    y=['cement_co2','coal_co2','oil_co2'],
+    labels={'value':'CO₂ Emissions','variable':'Fuel Source','year':'Year'},
+    title="Global Fuel-Specific CO₂ Emissions Trends"
+)
+fig6.update_traces(mode='markers+lines')
+
+# Add buttons to toggle each series
+fig6.update_layout(
+    updatemenus=[
+        dict(
+            type="buttons",
+            direction="down",
+            buttons=[
+                dict(label="All",
+                     method="update",
+                     args=[{"visible": [True, True, True]},
+                           {"title": "All Fuel Sources"}]),
+                dict(label="Cement",
+                     method="update",
+                     args=[{"visible": [True, False, False]},
+                           {"title": "Cement CO₂ Emissions"}]),
+                dict(label="Coal",
+                     method="update",
+                     args=[{"visible": [False, True, False]},
+                           {"title": "Coal CO₂ Emissions"}]),
+                dict(label="Oil",
+                     method="update",
+                     args=[{"visible": [False, False, True]},
+                           {"title": "Oil CO₂ Emissions"}]),
+            ],
+            pad={"r": 10, "t": 10},
+            showactive=True,
+            x=1.02,
+            xanchor="left",
+            y=1,
+            yanchor="top"
+        )
+    ]
+)
+
+st.plotly_chart(fig6, use_container_width=True)
+
+st.markdown(
+    """
+    The fuel‑specific CO₂ trends highlight distinct historical trajectories: **coal** led the early industrial era, rising steadily from the 19th century to peak around 1960 before plateauing and then surging again into the 21st century (now exceeding 65 Gt). **Oil** overtook coal in the mid‑20th century, climbing rapidly after 1950 and maintaining growth to roughly 55 Gt by 2023, reflecting the global shift to petroleum. **Cement** emissions, though much smaller, have grown exponentially since the 1950s—reaching over 7 Gt—driven by urbanization and infrastructure expansion. Together, these patterns illustrate how different sectors dominated successive phases of economic development: coal powered early industrialization, oil fueled mass mobility and modern economies, and cement production underpins today’s urban growth. This sectoral breakdown underscores the need for targeted mitigation—phasing down coal, decarbonizing oil use, and innovating low‑carbon cement technologies.
+    """
+)
+
 
 # --- Temperature Change & Greenhouse Gases Analysis ---
 st.markdown("# Temperature Change & Greenhouse Gases Analysis")
@@ -274,6 +272,7 @@ st.markdown(
     **Approach:** First, average temperature change contributions from each gas are computed for every year by aggregating country-level data, allowing for global-level visualization of how each gas has contributed to warming trends over time. This is visualized via a multi-line plot to highlight differences and overlaps in warming impacts across gases. Next, a scatter plot is created to directly compare total CO₂ emissions against temperature change from CO₂, aiming to visually assess the correlation between rising emissions and their associated warming effects.
     """
 )
+# Prepare data
 temp_change = data_clean.groupby('year').agg({
     'temperature_change_from_co2':'mean',
     'temperature_change_from_ch4':'mean',
@@ -281,21 +280,67 @@ temp_change = data_clean.groupby('year').agg({
     'temperature_change_from_n2o':'mean'
 }).reset_index()
 
+# Interactive multi-line with toggle buttons
 fig7 = px.line(
     temp_change,
     x='year',
-    y=['temperature_change_from_co2','temperature_change_from_ch4',
-       'temperature_change_from_ghg','temperature_change_from_n2o'],
+    y=[
+        'temperature_change_from_co2',
+        'temperature_change_from_ch4',
+        'temperature_change_from_ghg',
+        'temperature_change_from_n2o'
+    ],
     labels={'value':'Temperature Change','variable':'Gas'},
     title="Average Temperature Change Contributions Over Time"
 )
+
+# Add buttons to toggle each trace
+fig7.update_layout(
+    updatemenus=[
+        dict(
+            type="buttons",
+            direction="down",
+            buttons=[
+                dict(label="All",
+                     method="update",
+                     args=[{"visible": [True, True, True, True]},
+                           {"title": "All Gases"}]),
+                dict(label="CO₂",
+                     method="update",
+                     args=[{"visible": [True, False, False, False]},
+                           {"title": "Temperature Change from CO₂"}]),
+                dict(label="CH₄",
+                     method="update",
+                     args=[{"visible": [False, True, False, False]},
+                           {"title": "Temperature Change from CH₄"}]),
+                dict(label="GHG",
+                     method="update",
+                     args=[{"visible": [False, False, True, False]},
+                           {"title": "Temperature Change from Overall GHG"}]),
+                dict(label="N₂O",
+                     method="update",
+                     args=[{"visible": [False, False, False, True]},
+                           {"title": "Temperature Change from N₂O"}]),
+            ],
+            pad={"r": 10, "t": 10},
+            showactive=True,
+            x=1.02,
+            xanchor="left",
+            y=1,
+            yanchor="top"
+        )
+    ]
+)
+
 st.plotly_chart(fig7, use_container_width=True)
 
+# Scatter plot remains interactive by default
 fig8 = px.scatter(
     data_clean,
     x='co2',
     y='temperature_change_from_co2',
-    title="Total CO₂ Emissions vs. Temperature Change from CO₂"
+    title="Total CO₂ Emissions vs. Temperature Change from CO₂",
+    labels={'co2':'Total CO₂ Emissions','temperature_change_from_co2':'Temperature Change from CO₂'}
 )
 st.plotly_chart(fig8, use_container_width=True)
 
@@ -304,7 +349,6 @@ st.markdown(
     The visual analysis reveals that carbon dioxide (CO₂) is the primary contributor to global temperature change among the greenhouse gases, with its influence increasing steadily and sharply, especially after the 1950s—likely due to industrial expansion post-World War II. Methane (CH₄) and nitrous oxide (N₂O) also contribute to warming, but their impacts are significantly smaller, with CH₄ showing a gradual rise and N₂O remaining relatively stable until a slight increase in recent decades. The overall greenhouse gas (GHG) temperature change trend closely mirrors that of CO₂, confirming its dominant role. A strong positive correlation is evident between total CO₂ emissions and temperature change from CO₂, as shown in the scatter plot, where emissions and temperature rise together in a nonlinear, accelerating pattern. This suggests that as CO₂ emissions increase, their warming effect intensifies disproportionately. The clustering of data points also indicates common emission behaviors, while some outliers may reflect country-specific variations or abrupt industrial changes. Overall, the data underscores the urgent need to reduce CO₂ emissions to mitigate their escalating impact on global temperatures.
     """
 )
-
 # --- Interactive Visualizations ---
 st.markdown("# Interactive Visualizations")
 st.markdown(
@@ -319,23 +363,40 @@ st.markdown(
 unique_countries = sorted(data_clean['country'].unique())
 country = st.selectbox("Select Country:", unique_countries)
 
-df_country = data_clean[data_clean['country']==country].sort_values('year')
-fig9, ax9 = plt.subplots(figsize=(12,6))
-ax9.plot(df_country['year'], df_country['co2'], marker='o', label='Total CO₂')
-ax9.set_xlabel("Year"); ax9.set_ylabel("Total CO₂", color='blue')
-ax9.tick_params(axis='y', labelcolor='blue')
-ax9.legend(loc='upper left')
+df_country = data_clean[data_clean['country'] == country].sort_values('year')
 
-ax10 = ax9.twinx()
-ax10.plot(df_country['year'], df_country['co2_per_capita'], marker='o', label='CO₂ per Capita', color='green')
-ax10.set_ylabel("CO₂ per Capita", color='green')
-ax10.tick_params(axis='y', labelcolor='green')
-ax10.legend(loc='upper right')
+# Interactive dual-axis plot with Plotly
+fig9 = px.line(
+    df_country,
+    x='year',
+    y='co2',
+    labels={'co2': 'Total CO₂ Emissions', 'year': 'Year'},
+    title=f"Emissions Trends for {country}"
+)
+fig9.add_scatter(
+    x=df_country['year'],
+    y=df_country['co2_per_capita'],
+    mode='lines+markers',
+    name='CO₂ per Capita',
+    yaxis='y2'
+)
 
-st.pyplot(fig9)
+# Configure secondary y-axis
+fig9.update_layout(
+    yaxis=dict(title='Total CO₂ Emissions'),
+    yaxis2=dict(
+        title='CO₂ per Capita',
+        overlaying='y',
+        side='right'
+    ),
+    legend=dict(x=0.01, y=0.99),
+    margin=dict(l=40, r=40, t=60, b=40)
+)
+
+st.plotly_chart(fig9, use_container_width=True)
 
 st.markdown(
-    """
+    f"""
     The CO₂ emissions data for {country} reveals a compelling narrative of environmental impact over seven decades. Starting from minimal levels in 1950, emissions remained relatively low until approximately 2000, with a notable peak in the mid-1980s followed by a decline through the 1990s. The most striking feature is the dramatic surge around 2005-2010, when both total and per capita emissions increased dramatically, with total CO₂ emissions jumping from about 1-2 units to nearly 12 units by 2020—a roughly 6-fold increase in a short period. While per capita emissions (shown in green) exhibited greater volatility throughout, reaching their peak of approximately 0.40 units around 2010, they have since decreased somewhat even as total emissions continued climbing, suggesting population growth may be outpacing emissions growth in recent years. This pattern of correlation before 2000 and divergence after 2010 likely reflects {country}’s complex political and economic history, with periods of conflict, reconstruction, and development significantly influencing energy consumption and industrial activity throughout the nation.
     """
 )
@@ -486,34 +547,33 @@ agg = df_group.groupby(['group','country']).agg(
     co2_pc=('co2_per_capita','mean')
 ).reset_index()
 
-fig14, (ax14, ax15) = plt.subplots(1,2,figsize=(14,6))
+col1, col2 = st.columns(2)
 
-# Total CO₂ emissions
-for grp in ['Developed','Developing']:
-    subset = agg[agg['group']==grp]
-    ax14.bar(subset['country'], subset['total_co2'], label=grp)
-ax14.set_title(f"Total CO₂ Emissions by Country in {latest_year}")
-ax14.set_ylabel("Total CO₂ Emissions (Mt)")
-ax14.tick_params(axis='x', labelrotation=45)
-for lbl in ax14.get_xticklabels():
-    lbl.set_ha('right')
-ax14.grid(axis='y', linestyle='--', alpha=0.6)
-ax14.legend(title="Group")
+with col1:
+    fig_total = px.bar(
+        agg,
+        x='country',
+        y='total_co2',
+        color='group',
+        barmode='group',
+        title=f"Total CO₂ Emissions by Country in {latest_year}",
+        labels={'total_co2':'Total CO₂ Emissions (Mt)','country':'Country','group':'Group'}
+    )
+    fig_total.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig_total, use_container_width=True)
 
-# CO₂ per capita emissions
-for grp in ['Developed','Developing']:
-    subset = agg[agg['group']==grp]
-    ax15.bar(subset['country'], subset['co2_pc'], label=grp)
-ax15.set_title(f"CO₂ Emissions Per Capita by Country in {latest_year}")
-ax15.set_ylabel("CO₂ per Capita (t/person)")
-ax15.tick_params(axis='x', labelrotation=45)
-for lbl in ax15.get_xticklabels():
-    lbl.set_ha('right')
-ax15.grid(axis='y', linestyle='--', alpha=0.6)
-ax15.legend(title="Group")
-
-plt.tight_layout()
-st.pyplot(fig14)
+with col2:
+    fig_pc = px.bar(
+        agg,
+        x='country',
+        y='co2_pc',
+        color='group',
+        barmode='group',
+        title=f"CO₂ Emissions Per Capita by Country in {latest_year}",
+        labels={'co2_pc':'CO₂ per Capita (t/person)','country':'Country','group':'Group'}
+    )
+    fig_pc.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig_pc, use_container_width=True)
 
 st.markdown(
     """
@@ -539,35 +599,52 @@ st.markdown(
     3. Annotate a few notable outliers (e.g., China, India, USA, small high‑emitting countries).
     """
 )
+# Prepare data
 df_pp = df_latest[['country','population','co2']].dropna()
-X = np.log10(df_pp[['population']].values)
-y = np.log10(df_pp['co2'].values)
-model = LinearRegression().fit(X,y)
-y_pred = model.predict(X)
+df_pp['log_pop'] = np.log10(df_pp['population'])
+df_pp['log_co2'] = np.log10(df_pp['co2'])
+model = LinearRegression().fit(df_pp[['log_pop']], df_pp['log_co2'])
+df_pp['pred_log_co2'] = model.predict(df_pp[['log_pop']])
 
-fig15, ax15 = plt.subplots(figsize=(10,6))
-ax15.scatter(np.log10(df_pp['population']), np.log10(df_pp['co2']), s=60, alpha=0.7)
-ax15.plot(np.log10(df_pp['population']), y_pred, color='red', linewidth=2,
-          label=f'Fit: log₁₀(CO₂) = {model.coef_[0]:.2f}·log₁₀(Pop) + {model.intercept_:.2f}')
+# Interactive scatter with regression line
+fig15 = px.scatter(
+    df_pp,
+    x='log_pop',
+    y='log_co2',
+    hover_name='country',
+    title=f"Population vs. Total CO₂ Emissions (log‑log) in {latest_year}",
+    labels={
+        'log_pop': 'log₁₀(Population)',
+        'log_co2': 'log₁₀(Total CO₂ Emissions)'
+    }
+)
+# Add regression line
+fig15.add_traces(px.line(
+    df_pp.sort_values('log_pop'),
+    x='log_pop',
+    y='pred_log_co2'
+).data)
+
+# Annotate key outliers
 for country in ['China','United States','India','Russia','Japan']:
     row = df_pp[df_pp['country']==country]
     if not row.empty:
-        x0 = np.log10(row['population'].iloc[0])
-        y0 = np.log10(row['co2'].iloc[0])
-        ax15.text(x0, y0, country, fontsize=10, weight='bold')
-ax15.set_title(f"Population vs. Total CO₂ Emissions (log‑log) in {latest_year}", fontsize=18, pad=15)
-ax15.set_xlabel("log₁₀(Population)", fontsize=14)
-ax15.set_ylabel("log₁₀(Total CO₂ Emissions)", fontsize=14)
-ax15.legend()
-ax15.grid(True, linestyle='--', alpha=0.5)
-plt.tight_layout()
-st.pyplot(fig15)
+        fig15.add_annotation(
+            x=row['log_pop'].iloc[0],
+            y=row['log_co2'].iloc[0],
+            text=country,
+            showarrow=True,
+            arrowhead=1
+        )
+
+st.plotly_chart(fig15, use_container_width=True)
 
 st.markdown(
-    """
+    f"""
     In {latest_year}, a log‑log scatter of **Population** versus **Total CO₂ Emissions** reveals a nearly linear relationship (slope ≈ 0.92), indicating that larger populations generally produce proportionally more emissions—but slightly less than one‑to‑one. Major countries like China, India, and the United States cluster near the top, reflecting both large populations and high emissions. Notably, points above the trend line (e.g., some oil‑exporting states or small, energy‑intensive economies) emit more CO₂ than their population alone would predict, while those below the line (e.g., highly efficient or service‑based economies) emit less. This pattern underscores the strong role of population scale in driving emissions, while also highlighting outliers where energy intensity, economic structure, or policy interventions significantly alter the population‑emissions dynamic.
     """
 )
+
 
 # --- Historical vs. Current Emissions: Cumulative CO₂ vs. Share of Global CO₂ ---
 st.markdown("# Historical vs. Current Emissions: Cumulative CO₂ vs. Share of Global CO₂")
@@ -587,32 +664,50 @@ st.markdown(
     3. Annotate a few notable countries (e.g., United States, China, India, Russia, Saudi Arabia).
     """
 )
+# Prepare data
 df_hist = df_latest[['country','cumulative_co2','share_global_co2']].dropna()
-Xh = np.log10(df_hist[['cumulative_co2']].values)
-yh = df_hist['share_global_co2'].values
-model2 = LinearRegression().fit(Xh,yh)
-yh_pred = model2.predict(Xh)
+Xh = np.log10(df_hist[['cumulative_co2']])
+yh = df_hist['share_global_co2']
+model2 = LinearRegression().fit(Xh, yh)
+df_hist['pred_share'] = model2.predict(Xh)
+df_hist['log_cumco2'] = np.log10(df_hist['cumulative_co2'])
 
-fig16, ax16 = plt.subplots(figsize=(10,6))
-ax16.scatter(np.log10(df_hist['cumulative_co2']), df_hist['share_global_co2'], s=60, alpha=0.7)
-ax16.plot(np.log10(df_hist['cumulative_co2']), yh_pred, color='red', linewidth=2,
-          label=f'Fit: Share = {model2.coef_[0]:.2f}·log₁₀(CumCO₂) + {model2.intercept_:.2f}')
+# Interactive scatter with regression line
+fig16 = px.scatter(
+    df_hist,
+    x='log_cumco2',
+    y='share_global_co2',
+    hover_name='country',
+    title=f"Cumulative CO₂ vs. Share of Global CO₂ in {latest_year}",
+    labels={
+        'log_cumco2': 'log₁₀(Cumulative CO₂ Emissions, Mt)',
+        'share_global_co2': 'Share of Global Annual CO₂ Emissions (%)'
+    }
+)
+# Add regression line
+fig16.add_traces(px.line(
+    df_hist.sort_values('log_cumco2'),
+    x='log_cumco2',
+    y='pred_share',
+    labels={'pred_share':'Fit'},
+).data)
+
+# Annotate key countries
 for country in ['United States','China','India','Russia','Saudi Arabia']:
     row = df_hist[df_hist['country']==country]
     if not row.empty:
-        x0 = np.log10(row['cumulative_co2'].iloc[0])
-        y0 = row['share_global_co2'].iloc[0]
-        ax16.text(x0, y0, country, fontsize=10, weight='bold')
-ax16.set_title(f"Cumulative CO₂ vs. Share of Global CO₂ in {latest_year}", fontsize=18, pad=15)
-ax16.set_xlabel("log₁₀(Cumulative CO₂ Emissions, Mt)", fontsize=14)
-ax16.set_ylabel("Share of Global Annual CO₂ Emissions (%)", fontsize=14)
-ax16.legend()
-ax16.grid(True, linestyle='--', alpha=0.5)
-plt.tight_layout()
-st.pyplot(fig16)
+        fig16.add_annotation(
+            x=row['log_cumco2'].iloc[0],
+            y=row['share_global_co2'].iloc[0],
+            text=country,
+            showarrow=True,
+            arrowhead=1
+        )
+
+st.plotly_chart(fig16, use_container_width=True)
 
 st.markdown(
-    """
+    f"""
     In {latest_year}, the scatter of **log₁₀(Cumulative CO₂ Emissions)** against **Share of Global Annual CO₂ Emissions** reveals a strong positive relationship: countries with the largest historical emissions still command the biggest slices of today’s global output. China (≈10⁶ Mt cumulative; ~37 %) and the United States (≈10⁶·⁰⁵ Mt; ~13 %) stand out as dominant emitters, while Russia, India, and Saudi Arabia also exceed their historical weight. The fitted trend line (Share ≈ 2.70 · log₁₀(CumCO₂) – 5.59) quantifies this linkage. However, several nations lie above or below the line, indicating shifts in current emission leadership: emerging economies like India have a higher share than their past totals would suggest, whereas some long-industrialized countries show a smaller current share, reflecting stabilization or decline. This analysis underscores both the inertia of historical emissions and the evolving dynamics of global carbon leadership.
     """
 )
@@ -637,23 +732,45 @@ st.markdown(
 )
 df_dyn = df_latest[['country','co2_growth_prct','co2_per_capita']].dropna()
 
-fig17, ax17 = plt.subplots(figsize=(10,6))
-ax17.scatter(df_dyn['co2_per_capita'], df_dyn['co2_growth_prct'], s=60, alpha=0.7)
+# Interactive Plotly scatter
+fig17 = px.scatter(
+    df_dyn,
+    x='co2_per_capita',
+    y='co2_growth_prct',
+    hover_name='country',
+    title=f"CO₂ Growth Rate vs. CO₂ Per Capita in {latest_year}",
+    labels={
+        'co2_per_capita': 'CO₂ Emissions Per Capita (t CO₂/person)',
+        'co2_growth_prct': 'CO₂ Emissions Growth Rate (%)'
+    }
+)
+
+# Annotate key countries
 for country in ['United States','China','India','Germany','Brazil']:
-    row = df_dyn[df_dyn['country']==country]
+    row = df_dyn[df_dyn['country'] == country]
     if not row.empty:
-        x0, y0 = row[['co2_per_capita','co2_growth_prct']].iloc[0]
-        ax17.text(x0, y0, country, fontsize=10, weight='bold')
-ax17.axhline(0, color='grey', linestyle='--', linewidth=1)
-ax17.set_title(f"CO₂ Growth Rate vs. CO₂ Per Capita in {latest_year}", fontsize=18, pad=15)
-ax17.set_xlabel("CO₂ Emissions Per Capita (t CO₂/person)", fontsize=14)
-ax17.set_ylabel("CO₂ Emissions Growth Rate (%)", fontsize=14)
-ax17.grid(True, linestyle='--', alpha=0.5)
-plt.tight_layout()
-st.pyplot(fig17)
+        fig17.add_annotation(
+            x=row['co2_per_capita'].iloc[0],
+            y=row['co2_growth_prct'].iloc[0],
+            text=country,
+            showarrow=True,
+            arrowhead=1
+        )
+
+# Add zero-growth reference line
+fig17.add_shape(
+    type='line',
+    x0=df_dyn['co2_per_capita'].min(),
+    y0=0,
+    x1=df_dyn['co2_per_capita'].max(),
+    y1=0,
+    line=dict(color='Grey', dash='dash')
+)
+
+st.plotly_chart(fig17, use_container_width=True)
 
 st.markdown(
-    """
+    f"""
     In {latest_year}, high‑emitting nations like the United States (~14 t CO₂/person) and Germany (~8 t CO₂/person) are bucking the trend with negative growth rates, proving that economic prosperity and emission reductions can go hand in hand. In contrast, rapidly industrializing economies—India (~3 t/person) and Brazil (~2 t/person)—are still on an upward trajectory, reflecting growing energy demand. Mid‑range emitters (4–6 t/person) cluster around zero growth, indicating effective stabilization efforts, while a handful of small, fossil‑fuel–exporting countries continue to ramp up emissions. These patterns underscore the importance of bespoke climate strategies: accelerate decarbonization in wealthier countries and support clean‑energy transitions in emerging markets.
     """
 )

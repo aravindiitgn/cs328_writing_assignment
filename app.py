@@ -191,9 +191,10 @@ st.markdown(
 st.markdown("# Fuel-Specific (Sectoral) Deep Dives")
 st.markdown(
     """
-    **Hypothesis:** Globally, CO₂ emissions from cement production have risen continuously due to expanding infrastructure demands; coal-related emissions peaked mid-century and have started to decline as cleaner energy sources are adopted; and oil-derived emissions have grown more moderately, with recent years showing signs of stabilization driven by improvements in fuel efficiency and shifts in transport modalities.
+    **Hypothesis:** Cement-related CO₂ emissions have steadily risen with global infrastructure growth; coal emissions peaked mid-century and are now declining due to cleaner energy use;
     """
 )
+
 global_fuel = data_clean.groupby('year').agg({
     'cement_co2':'sum',
     'coal_co2':'sum',
@@ -257,7 +258,7 @@ st.markdown(
 st.markdown("# Temperature Change & Greenhouse Gases Analysis")
 st.markdown(
     """
-    **Hypothesis:** Temperature change attributable to CO₂ will exhibit the most pronounced upward trend and correlate closely with total CO₂ emissions; methane (CH₄) and nitrous oxide (N₂O) contributions will remain smaller in magnitude but accelerate in recent decades; and the combined temperature change from all greenhouse gases will rise more steeply than any individual gas.
+    **Hypothesis:** CO₂ will drive the most significant temperature rise, closely tracking its emissions, while overall warming from all greenhouse gases will outpace individual contributions.
     """
 )
 
@@ -385,6 +386,11 @@ st.markdown(
 
 # --- World Map: Global Distribution ---
 st.markdown("# World Map: Global Distribution of CO₂ Emissions")
+st.markdown(
+    """
+    **Hypothesis:** CO₂ emissions are heavily concentrated in industrialized nations, with China, the US, and India leading, suggesting that historical and economic factors drive emission disparities more than population or regional development alone.
+    """
+)
 df_latest = data_clean[(data_clean['year']==latest_year) & data_clean['iso_code'].notnull()]
 df_map = df_latest.groupby(['iso_code','country'], as_index=False)['co2'].sum()
 
@@ -410,6 +416,11 @@ st.markdown(
 
 # --- Pie Chart: CO₂ Emission Contributions by Source ---
 st.markdown("# Pie Chart: CO₂ Emission Contributions by Source")
+st.markdown(
+    """
+    **Hypothesis:** Decarbonization must go beyond coal and oil, as nearly half of CO₂ emissions come from varied sources like land use and industry.
+    """
+)
 
 total_co2  = df_latest['co2'].sum()
 cement_co2 = df_latest['cement_co2'].sum()

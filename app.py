@@ -66,7 +66,11 @@ st.write("Shape after cleaning:", data_clean.shape)
 
 # --- Step 3: Exploratory Data Analysis ---
 st.markdown("# Analysing the Data")
-
+st.markdown(
+    """
+    Let’s begin our exploration at the **global level**, to see how humanity’s carbon footprint has evolved over time.
+    """
+)
 # Global Emissions Trends
 st.markdown("## Global Emissions Trends")
 st.markdown(
@@ -100,6 +104,12 @@ st.markdown(
     **Hypothesis:** Since the mid‑20th century, global economic and technological advances have enabled a decoupling of per‑person CO₂ emissions from total emissions growth—so that although total CO₂ continues to climb, average per‑capita emissions have plateaued or even declined.
 
     The two panels above settle this hypothesis. The **top panel** shows total global CO₂ emissions accelerating sharply after 1950, climbing from ~35 Gt to over 240 Gt by 2023. Yet the **bottom panel** reveals that average per‑person emissions peaked around the 1950s–1970s at roughly 6–7 t CO₂/person and have since oscillated between 4.5 and 6.5 t. This divergence—soaring total emissions alongside a stable or gently declining per‑capita curve—confirms that while the world’s carbon footprint grows with population and economic scale, improvements in energy efficiency, shifts toward service economies, and the adoption of cleaner energy sources have partially offset per‑person emissions. Thus, the data support our hypothesis of mid‑century decoupling: humanity is emitting more CO₂ overall, but not at the same rate per individual.
+    """
+)
+st.markdown(
+    """
+    These strong correlations suggest common causes.  
+    Now we’ll compare how individual countries measure up.
     """
 )
 
@@ -139,6 +149,11 @@ st.plotly_chart(fig3, use_container_width=True)
 st.markdown(
     """
     The correlation matrix of key emission indicators reveals uniformly strong positive relationships, indicating that different sources of greenhouse gases tend to rise and fall together globally. Total CO₂ emissions correlate most closely with oil CO₂ (r ≈ 0.97) and coal CO₂ (r ≈ 0.96), reflecting the continued dominance of fossil fuels. Methane and nitrous oxide emissions also track closely with total CO₂ (r ≈ 0.92 and r ≈ 0.95, respectively) and exhibit an exceptionally high inter‑gas correlation (r ≈ 0.98), suggesting common agricultural and industrial drivers. Cement CO₂ shows slightly weaker—but still substantial—links to other sources (r ≈ 0.79–0.91). Overall, these patterns underscore how economic activity, energy use, and land‑use practices jointly drive multiple greenhouse‑gas emissions, reinforcing the need for integrated mitigation strategies.
+    """
+)
+st.markdown(
+    """
+    By lining up the top emitters, we can see how industry, population, and policies affect each country’s emissions.
     """
 )
 # --- Country-Level Analysis ---
@@ -252,7 +267,12 @@ st.markdown(
     The fuel‑specific CO₂ trends highlight distinct historical trajectories: **coal** led the early industrial era, rising steadily from the 19th century to peak around 1960 before plateauing and then surging again into the 21st century (now exceeding 65 Gt). **Oil** overtook coal in the mid‑20th century, climbing rapidly after 1950 and maintaining growth to roughly 55 Gt by 2023, reflecting the global shift to petroleum. **Cement** emissions, though much smaller, have grown exponentially since the 1950s—reaching over 7 Gt—driven by urbanization and infrastructure expansion. Together, these patterns illustrate how different sectors dominated successive phases of economic development: coal powered early industrialization, oil fueled mass mobility and modern economies, and cement production underpins today’s urban growth.
     """
 )
-
+st.markdown(
+    """
+    Sector trends show coal, oil, and cement rising and falling.  
+    Next, we’ll see how these emissions translate into warming.
+    """
+)
 
 # --- Temperature Change & Greenhouse Gases Analysis ---
 st.markdown("# Temperature Change & Greenhouse Gases Analysis")
@@ -339,6 +359,12 @@ st.markdown(
     The visual analysis reveals that carbon dioxide (CO₂) is the primary contributor to global temperature change among the greenhouse gases, with its influence increasing steadily and sharply, especially after the 1950s—likely due to industrial expansion post-World War II. Methane (CH₄) and nitrous oxide (N₂O) also contribute to warming, but their impacts are significantly smaller, with CH₄ showing a gradual rise and N₂O remaining relatively stable until a slight increase in recent decades. The overall greenhouse gas (GHG) temperature change trend closely mirrors that of CO₂, confirming its dominant role. A strong positive correlation is evident between total CO₂ emissions and temperature change from CO₂, as shown in the scatter plot, where emissions and temperature rise together in a nonlinear, accelerating pattern. This suggests that as CO₂ emissions increase, their warming effect intensifies disproportionately. The clustering of data points also indicates common emission behaviors, while some outliers may reflect country-specific variations or abrupt industrial changes. Overall, the data underscores the urgent need to reduce CO₂ emissions to mitigate their escalating impact on global temperatures.
     """
 )
+
+st.markdown(
+    """
+    We’ve covered global and sectoral trends—now pick a country below to explore its unique path.
+    """
+)
 # --- Interactive Visualizations ---
 st.markdown("# Interactive Visualizations - Country-Wise")
 
@@ -413,7 +439,12 @@ st.markdown(
     """
 )
 
-
+st.markdown(
+    """
+    The world map highlights regional hotspots.  
+    Let’s now break down exactly which sources drive those totals.
+    """
+)
 # --- Pie Chart: CO₂ Emission Contributions by Source ---
 st.markdown("# Pie Chart: CO₂ Emission Contributions by Source")
 st.markdown(
@@ -455,7 +486,12 @@ st.markdown(
     “Other Emissions” account for 47.5% of global CO₂ output, encompassing land-use changes, biomass burning, and miscellaneous industrial processes. Coal contributes 27.4%, reflecting heavy reliance on coal-fired power generation; oil makes up 22.2%, driven by transportation and industry; and cement production represents 2.9%, highlighting infrastructure’s carbon footprint. This breakdown underscores that while tackling coal and oil is crucial, nearly half of emissions come from a diverse array of sources—mandating comprehensive policies and technologies to address both major and less obvious contributors for effective decarbonization.
     """
 )
-
+st.markdown(
+    """
+    Nearly half of emissions come from “other” sources.  
+    How does this mix differ between wealthy and developing nations?
+    """
+)
 
 # --- Country-Wise CO₂ Emissions Pie Chart ---
 st.markdown("# Country-Wise CO₂ Emissions Pie Chart")
@@ -539,7 +575,12 @@ st.markdown(
     The comparison between developed and developing countries reveals stark contrasts in CO₂ emissions patterns. Developed nations like the U.S. and Germany show significantly higher per capita emissions (likely 10-20 t/person) compared to developing countries such as India and Indonesia (typically 1-5 t/person), reflecting greater energy consumption and industrialization in wealthier economies. However, some developing nations like South Africa and Mexico may bridge this gap due to fossil fuel dependence. In absolute terms, the U.S. likely dwarfs other countries' total emissions, while populous developing nations like India may rank high in total volume despite low per capita figures. This disparity highlights the climate policy dilemma: developed nations must reduce high per capita emissions through technology and efficiency, while developing countries face the challenge of curbing emission growth during economic expansion. The data underscores that equitable climate solutions must address both historical responsibility (cumulative emissions) and future development needs.
     """
 )
-
+st.markdown(
+    """
+    We see clear gaps between rich and developing countries.  
+    Next, let’s check how population size links to total emissions.
+    """
+)
 # --- Population vs. Total CO₂ Emissions ---
 st.markdown("# Population vs. Total CO₂ Emissions")
 
@@ -588,7 +629,12 @@ st.markdown(
     In {latest_year}, a log‑log scatter of **Population** versus **Total CO₂ Emissions** reveals a nearly linear relationship (slope ≈ 0.92), indicating that larger populations generally produce proportionally more emissions—but slightly less than one‑to‑one. Major countries like China, India, and the United States cluster near the top, reflecting both large populations and high emissions. Notably, points above the trend line (e.g., some oil‑exporting states or small, energy‑intensive economies) emit more CO₂ than their population alone would predict, while those below the line (e.g., highly efficient or service‑based economies) emit less. This pattern underscores the strong role of population scale in driving emissions, while also highlighting outliers where energy intensity, economic structure, or policy interventions significantly alter the population‑emissions dynamic.
     """
 )
-
+st.markdown(
+    """
+    Bigger populations usually mean more emissions, but some countries are outliers.  
+    Finally, we’ll compare each nation’s historical emissions with its share of today’s output.
+    """
+)
 
 # --- Historical vs. Current Emissions: Cumulative CO₂ vs. Share of Global CO₂ ---
 st.markdown("# Historical vs. Current Emissions: Cumulative CO₂ vs. Share of Global CO₂")
@@ -641,3 +687,16 @@ st.markdown(
     """
 )
 
+st.markdown("# Summing Up!")
+st.markdown(
+    """
+    In this comprehensive walkthrough, we saw that:
+
+    1. **Global vs Per-Capita Divergence:** Total CO₂ emissions have soared since the 1950s, yet per-capita emissions have flattened—evidence of efficiency gains partially offsetting scale effects.
+    2. **Sectoral Evolution:** Coal powered early industrial growth, oil fueled the modern economy, and cement’s rapid rise underpins urban expansion.
+    3. **Country Contrasts:** China now leads in total emissions, but high-income nations maintain the largest per-person footprints.
+    4. **Population Dynamics:** A near-linear log-log relationship ties population size to CO₂ output, with notable outliers reflecting policy or economic structure.
+    5. **Historical Inertia vs. Current Change:** Countries with large cumulative emissions still dominate today’s annual share, though emerging economies are narrowing the gap.
+
+    """
+)
